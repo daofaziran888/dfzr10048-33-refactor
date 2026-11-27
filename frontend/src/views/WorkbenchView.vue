@@ -46,7 +46,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="String(row.id)" :data-testid="`row-${row.id}`" :data-status="String(row.status)">
+        <tr
+          v-for="row in rows"
+          :key="String(row.id)"
+          :data-testid="`row-${row.id}`"
+          :data-status="String(row.status)"
+          :class="{ 'row-selected': meta.key === 'transcribe_task' && selectedTaskId === row.id }"
+          @click="meta.key === 'transcribe_task' && (selectedTaskId = row.id)"
+        >
           <td v-for="column in meta.fields" :key="column">{{ row[column] ?? '—' }}</td>
           <td>{{ row.status }}</td>
           <td class="row-actions">
@@ -56,7 +63,7 @@
               class="link"
               type="button"
               :data-testid="`action-${row.id}-${action}`"
-              @click="runAction(action, row)"
+              @click.stop="runAction(action, row)"
             >
               {{ action }}
             </button>
@@ -69,6 +76,14 @@
         </tr>
       </tbody>
     </table>
+
+    <TranscribeTaskPanel
+      v-if="meta.key === 'transcribe_task'"
+      ref="taskPanelRef"
+      :selected-task="selectedTask"
+      @reload="reload"
+    />
+    <VersionHandoffPanel v-else-if="meta.key === 'transcript_version'" />
 
     <div v-if="showCreate" class="modal-backdrop" data-testid="create-modal">
       <form class="modal" @submit.prevent="submitCreate">
@@ -96,6 +111,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import TranscribeTaskPanel from '@/components/TranscribeTaskPanel.vue'
+import VersionHandoffPanel from '@/components/VersionHandoffPanel.vue'
 import {
   createEntry,
   downloadEntries,
@@ -115,6 +132,11 @@ const filterFields = meta.fields.slice(0, 3)
 const showCreate = ref(false)
 const creating = ref(false)
 const createValues = ref<Record<string, string>>({})
+const selectedTaskId = ref<number | null>(null)
+const taskPanelRef = ref<InstanceType<typeof TranscribeTaskPanel> | null>(null)
+const selectedTask = computed(
+  () => rows.value.find((row) => row.id === selectedTaskId.value) ?? null,
+)
 const stats = computed(() => [
   { label: meta.metrics[0], value: total.value },
   { label: meta.metrics[1], value: rows.value.filter((row) => row.status === meta.statuses[1]).length },
@@ -167,6 +189,13 @@ async function submitCreate() {
 
 async function runAction(action: string, row: EntryRow) {
   errorMessage.value = ''
+  // 转写任务的「确认产出」改走共享写入边界：弹出专用录入框，行数/置信度/耗时
+  // 仍从原按钮确认，通用状态动作「启动转写/登记异常」维持旧接口不变。
+  if (meta.key === 'transcribe_task' && action === '确认产出') {
+    selectedTaskId.value = row.id
+    taskPanelRef.value?.openConfirm()
+    return
+  }
   try {
     const result = await applyAction(meta.key, Number(row.id), action)
     if (!result.ok) throw new Error(result.message)

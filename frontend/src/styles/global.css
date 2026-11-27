@@ -70,3 +70,12 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .analysis-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 12px 0; }
 .analysis-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--brand); min-width: 24px; position: relative; transition: height 0.4s; }
 .analysis-bar span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+/* 产出确认与子版本交接面板 */
+.handoff-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 16px; }
+.handoff-head h3 { margin: 0 0 4px; font-size: 15px; }
+.handoff-toolbar { display: flex; gap: 10px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
+.handoff-panel h4 { font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+.handoff-panel code { font-size: 12px; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; }
+.row-selected { outline: 2px solid var(--brand); outline-offset: -2px; cursor: pointer; }
+.data-table tbody tr { cursor: default; }
+

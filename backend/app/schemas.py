@@ -29,3 +29,26 @@ class EntryPayload(BaseModel):
 class ActionPayload(BaseModel):
     action: str
     remark: str | None = None
+
+
+class ProductionConfirmPayload(BaseModel):
+    line_count: int
+    avg_confidence: float
+    elapsed_seconds: int
+
+
+class HandoffOpenPayload(BaseModel):
+    version_id: str
+    version_no: str
+    parent: str = "-"
+    change_lines: int
+    summary: str = ""
+    digest: str
+
+
+class HandoffResumePayload(BaseModel):
+    digest: str | None = None
+
+
+class HandoffRejectPayload(BaseModel):
+    reason: str
